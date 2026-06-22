@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>Realtime Spectrogram (64x Amplified)</title>
+
+  <style>
+    body {
+      margin: 0;
+      background: black;
+      overflow: hidden;
+      font-family: sans-serif;
+      color: white;
+    }
+
+    #info {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+    }
+
+    canvas {
+      display: block;
+    }
+
+    button {
+      padding: 8px 16px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+
+<div id="info">
+  <button id="startBtn">Start Microphone</button>
+</div>
+
+<canvas id="canvas"></canvas>
+
+<script>
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+resize();
+window.addEventListener("resize", resize);
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+document.getElementById("startBtn").onclick = async () => {
+  const stream = await navigator.mediaDevices.getUserMedia({
+    audio: true
+  });
+
+  const audioCtx = new AudioContext();
+
+  const source = audioCtx.createMediaStreamSource(stream);
+
+  // Create a ScriptProcessorNode to amplify raw audio
+  const scriptProcessor = audioCtx.createScriptProcessor(4096, 1, 1);
+  
+  // Create analyser for the spectrogram
+  const analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 1024;
+
+  // Connect: source -> scriptProcessor -> analyser -> destination (optional)
+  source.connect(scriptProcessor);
+  scriptProcessor.connect(analyser);
+  // Connect analyser to destination so we hear the amplified audio
+  analyser.connect(audioCtx.destination);
+
+  // Buffer for storing the amplified audio samples
+  const bufferLength = analyser.frequencyBinCount;
+  const data = new Uint8Array(bufferLength);
+
+  // Store the raw audio data for processing
+  let rawAudioData = new Float32Array(0);
+
+  scriptProcessor.onaudioprocess = function(event) {
+    // Get the input audio data (raw PCM)
+    const inputData = event.inputBuffer.getChannelData(0);
+    
+    // Create amplified version (multiply by 64)
+    const amplifiedData = new Float32Array(inputData.length);
+    for (let i = 0; i < inputData.length; i++) {
+      // Amplify by 64 and clamp to prevent distortion/clipping
+      let amplified = inputData[i] * 16;
+      
+      // Clamp to [-1, 1] range to prevent clipping
+      amplified = Math.max(-1, Math.min(1, amplified));
+      
+      amplifiedData[i] = amplified;
+    }
+    
+    // Store the amplified data for the analyser
+    // We need to write it to the output buffer so analyser can read it
+    const outputData = event.outputBuffer.getChannelData(0);
+    for (let i = 0; i < outputData.length; i++) {
+      outputData[i] = amplifiedData[i];
+    }
+  };
+
+  function draw() {
+    requestAnimationFrame(draw);
+
+    // Get frequency data from analyser (which now receives amplified audio)
+    analyser.getByteFrequencyData(data);
+
+    // scroll image left
+    const imageData = ctx.getImageData(
+      1,
+      0,
+      canvas.width - 1,
+      canvas.height
+    );
+
+    ctx.putImageData(imageData, 0, 0);
+
+    // draw newest column on right edge
+    for (let i = 0; i < bufferLength; i++) {
+      const value = data[i];
+
+      // frequency position
+      const y = canvas.height - (i / bufferLength) * canvas.height;
+
+      // color mapping - brighter for amplified signal
+      const hue = value * 1.5;
+      const brightness = Math.min(100, value * 0.8);
+
+      ctx.fillStyle = `hsl(${hue}, 100%, ${brightness / 2}%)`;
+
+      ctx.fillRect(canvas.width - 1, y, 1, canvas.height / bufferLength + 1);
+    }
+  }
+
+  draw();
+
+  document.getElementById("startBtn").remove();
+};
+</script>
+
+</body>
+</html>

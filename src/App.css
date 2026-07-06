@@ -1,0 +1,264 @@
+.page-shell {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2rem 0 4rem;
+}
+
+.section {
+  margin-top: 2rem;
+}
+
+.hero,
+.footer-panel,
+.info-card,
+.step-card,
+.section-grid,
+.hero-panel {
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-soft);
+}
+
+.hero {
+  display: grid;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+.hero-copy h1 {
+  margin: 0;
+  font-size: clamp(2.25rem, 5vw, 4.5rem);
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+}
+
+.hero-text,
+.section-heading p,
+.info-card p,
+.step-card p,
+.footer-panel p,
+.helper-text,
+.feature-list {
+  color: var(--color-text-muted);
+}
+
+.hero-text {
+  max-width: 42rem;
+  font-size: 1.05rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.875rem;
+  margin-top: 1.5rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0.85rem 1.2rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    background-color 120ms ease,
+    border-color 120ms ease;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.button-primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.button-secondary {
+  background: transparent;
+  border-color: var(--color-border-strong);
+  color: var(--color-text);
+}
+
+.hero-panel {
+  padding: 1.25rem;
+  background: var(--color-surface-alt);
+}
+
+.hero-panel h2,
+.section-heading h2,
+.info-card h3,
+.step-card h3,
+.footer-panel h2 {
+  margin-top: 0;
+}
+
+.feature-list {
+  margin: 1rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.feature-list li + li {
+  margin-top: 0.65rem;
+}
+
+.section-grid {
+  padding: 1.5rem;
+}
+
+.section-heading {
+  margin-bottom: 1.5rem;
+}
+
+.action-grid,
+.steps-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.info-card,
+.step-card {
+  padding: 1.25rem;
+}
+
+.helper-text,
+.status-text {
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+.status-text {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.status-text-error {
+  color: var(--color-danger);
+}
+
+.step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.footer-panel {
+  padding: 1.5rem;
+}
+
+.recorder-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.recorder-card,
+.visualizer-card {
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background: var(--color-surface-alt);
+}
+
+.recorder-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.instruction-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.55rem 0.9rem;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-primary);
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.progress-label {
+  margin: 1rem 0 0.5rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+.progress-track {
+  width: 100%;
+  height: 12px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--color-border);
+}
+
+.progress-bar {
+  height: 100%;
+  background: var(--color-secondary);
+  transition: width 100ms linear;
+}
+
+.countdown-text {
+  margin-top: 0.5rem;
+  color: var(--color-text-muted);
+}
+
+.visualizer-card canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 16px;
+  background: #081018;
+}
+
+.audio-player {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+@media (min-width: 760px) {
+  .hero {
+    grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr);
+    align-items: stretch;
+    padding: 2rem;
+  }
+
+  .action-grid,
+  .steps-grid,
+  .recorder-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .steps-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

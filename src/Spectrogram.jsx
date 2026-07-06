@@ -267,38 +267,37 @@ export function Spectrogram({ onRecordingComplete }) {
   useEffect(() => stopRecording, [])
 
   return (
-    <>
-      <button onClick={isRecording ? stopRecording : startRecording}>
-        {isRecording ? 'Stop Microphone' : 'Start Microphone'}
-      </button>
-      <p>{currentInstruction}</p>
-      {isRecording && (
-        <>
-          <div
-            style={{
-              width: '320px',
-              maxWidth: '100%',
-              height: '10px',
-              backgroundColor: '#ddd',
-              borderRadius: '999px',
-              overflow: 'hidden',
-              marginBottom: '8px',
-            }}
-          >
-            <div
-              style={{
-                width: `${phaseProgress * 100}%`,
-                height: '100%',
-                backgroundColor: '#4a90e2',
-                transition: 'width 100ms linear',
-              }}
-            ></div>
-          </div>
-          <p>{phaseSecondsLeft}s left</p>
-        </>
-      )}
-      <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}></canvas>
-      {audioUrl && <audio controls src={audioUrl}></audio>}
-    </>
+    <div className="recorder-layout">
+      <article className="recorder-card">
+        <p className="eyebrow">Guided recording</p>
+        <h3>Follow the breathing prompts</h3>
+        <p className="helper-text">
+          Record a guided sample while the app tracks inhale, pause, and exhale timing.
+        </p>
+        <div className="recorder-actions">
+          <button className="button button-primary" type="button" onClick={isRecording ? stopRecording : startRecording}>
+            {isRecording ? 'Stop Microphone' : 'Start Microphone'}
+          </button>
+        </div>
+        <div className="instruction-badge">{currentInstruction}</div>
+        {isRecording && (
+          <>
+            <p className="progress-label">Current phase progress</p>
+            <div className="progress-track" aria-hidden="true">
+              <div className="progress-bar" style={{ width: `${phaseProgress * 100}%` }}></div>
+            </div>
+            <p className="countdown-text">{phaseSecondsLeft}s left in this step</p>
+          </>
+        )}
+      </article>
+
+      <article className="visualizer-card">
+        <p className="eyebrow">Live visualization</p>
+        <h3>See the breath pattern in real time</h3>
+        <p className="helper-text">The spectrogram updates while the microphone is active and stays available for review.</p>
+        <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}></canvas>
+        {audioUrl && <audio className="audio-player" controls src={audioUrl}></audio>}
+      </article>
+    </div>
   )
 }

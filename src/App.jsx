@@ -14,33 +14,54 @@ function App() {
   const [recordingFile, setRecordingFile] = useState(null)
   const [recordingLabels, setRecordingLabels] = useState([])
   const [downloadError, setDownloadError] = useState('')
+  const [uploadMessage, setUploadMessage] = useState('')
+  const [isUploading, setIsUploading] = useState(false)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   function handleRecordingComplete(recording) {
     setRecordingFile(recording?.file ?? null)
     setRecordingLabels(recording?.labels ?? [])
+    setUploadMessage('')
   }
 
   async function insertData() {
-    if (!recordingFile) {
+    if (!recordingFile || isUploading) {
       return
     }
 
-    const filePath = `${FOLDER_NAME}/${recordingFile.name}`
+    setIsUploading(true)
+    setUploadMessage('')
 
-    await supabase.storage.from(BUCKET_NAME).upload(filePath, recordingFile, {
-      contentType: recordingFile.type,
-      upsert: false,
-    })
+    try {
+      const filePath = `${FOLDER_NAME}/${recordingFile.name}`
 
-    const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/${filePath}`
+      await supabase.storage.from(BUCKET_NAME).upload(filePath, recordingFile, {
+        contentType: recordingFile.type,
+        upsert: false,
+      })
 
-    await supabase.from('audio_meta_data').insert({
-      download_link: fileUrl,
-      labels: recordingLabels,
-    })
+      const fileUrl = `${SUPABASE_URL}/storage/v1/object/public/${BUCKET_NAME}/${filePath}`
+
+      await supabase.from('audio_meta_data').insert({
+        download_link: fileUrl,
+        labels: recordingLabels,
+      })
+
+      setUploadMessage('Recording uploaded successfully.')
+    } catch (error) {
+      console.error(error)
+      setUploadMessage(error instanceof Error ? error.message : 'Upload failed.')
+    } finally {
+      setIsUploading(false)
+    }
   }
 
   async function downloadAllRecordings() {
+    if (isDownloading) {
+      return
+    }
+
+    setIsDownloading(true)
     setDownloadError('')
 
     try {
@@ -82,19 +103,109 @@ function App() {
       URL.revokeObjectURL(zipUrl)
     } catch (error) {
       console.error(error)
-      setDownloadError(error instanceof Error ? error.message : 'Download failed')
+      setDownloadError(error instanceof Error ? error.message : 'Download failed.')
+    } finally {
+      setIsDownloading(false)
     }
   }
 
   return (
-    <>
-      <button onClick={insertData} disabled={!recordingFile}>
-        Upload Recording
-      </button>
-      <button onClick={downloadAllRecordings}>Download All Recordings</button>
-      {downloadError && <p>{downloadError}</p>}
-      <Spectrogram onRecordingComplete={handleRecordingComplete} />
-    </>
+    <main className="page-shell">
+      <section className="hero section">
+        <div className="hero-copy">
+          <h1>Breath Detection Data Collection</h1>
+          <p className="hero-text">
+            A guided recording tool for inhale and exhale exercises that captures audio, labels each
+            breathing phase, and supports open research workflows.
+          </p>
+        </div>
+      </section>
+
+      <section className="section">
+        <div className="section-heading">
+          <p className="eyebrow">How it works</p>
+          <h2>Simple flow for contributors and researchers</h2>
+        </div>
+        <div className="steps-grid">
+          <article className="step-card">
+            <span className="step-number">1</span>
+            <h3>Follow the breathing prompts</h3>
+            <p>Use the guided inhale, pause, and exhale instructions while the app records audio.</p>
+          </article>
+          <article className="step-card">
+            <span className="step-number">2</span>
+            <h3>Review and upload</h3>
+            <p>Listen back to the recording and upload the labeled sample to the shared dataset.</p>
+          </article>
+          <article className="step-card">
+            <span className="step-number">3</span>
+            <h3>Download for research</h3>
+            <p>Researchers can download public recordings directly for analysis, training, and validation.</p>
+          </article>
+        </div>
+      </section>
+
+      <section className="section section-grid" id="recording-workspace">
+        <div className="section-heading">
+          <h2> Help us collect more data </h2>
+        </div>
+        <Spectrogram onRecordingComplete={handleRecordingComplete} />
+      </section>
+
+      <section className="section section-grid">
+        <div className="section-heading">
+          <p className="eyebrow">Dataset actions</p>
+          <h2>Upload new samples or download public recordings</h2>
+          <p>One path is for contributors adding labeled data. The other is for researchers using it.</p>
+        </div>
+        <div className="action-grid">
+          <article className="info-card">
+            <h3>Upload Your Recording</h3>
+            <p>
+              Save your labeled sample to the Supabase dataset for future model training and analysis.
+            </p>
+            <button
+              className="button button-primary"
+              type="button"
+              onClick={insertData}
+              disabled={!recordingFile || isUploading}
+            >
+              {isUploading ? 'Uploading...' : 'Upload Recording'}
+            </button>
+            <p className="helper-text">
+              {recordingFile ? `Ready to upload: ${recordingFile.name}` : 'Record a sample first to enable upload.'}
+            </p>
+            {uploadMessage && <p className="status-text">{uploadMessage}</p>}
+          </article>
+
+          <article className="info-card">
+            <h3>Download Open Recordings</h3>
+            <p>
+              Access publicly available recordings directly from the dataset for research and development.
+            </p>
+            <button
+              className="button button-secondary"
+              type="button"
+              onClick={downloadAllRecordings}
+              disabled={isDownloading}
+            >
+              {isDownloading ? 'Preparing Download...' : 'Download All Recordings'}
+            </button>
+            <p className="helper-text">Downloads the current public recordings as a single ZIP file.</p>
+            {downloadError && <p className="status-text status-text-error">{downloadError}</p>}
+          </article>
+        </div>
+      </section>
+
+      <section className="section footer-panel">
+        <p className="eyebrow">Open research</p>
+        <h2>Built to support breath-detection research as an open-source workflow.</h2>
+        <p>
+          This project helps collect guided breathing exercise data, attach labels to each phase, and
+          make public recordings easy to reuse.
+        </p>
+      </section>
+    </main>
   )
 }
 

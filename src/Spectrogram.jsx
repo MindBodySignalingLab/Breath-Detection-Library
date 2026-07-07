@@ -5,18 +5,39 @@ const CANVAS_WIDTH = 800
 const CANVAS_HEIGHT = 512
 const MAX_RECORDING_MS = 120000
 const MICROPHONE_GAIN = 64
-const BREATH_STEPS = [
-  { label: 'inhale', minMs: 4000, maxMs: 6000 },
-  { label: 'pause', minMs: 1000, maxMs: 2000 },
-  { label: 'exhale', minMs: 4000, maxMs: 6000 },
-  { label: 'pause', minMs: 1000, maxMs: 2000 },
-]
+const MODE_CONFIG = {
+  breathing: {
+    title: 'Follow the breathing prompts',
+    description: 'Record a guided sample while the app tracks inhale, pause, and exhale timing.',
+    visualizerTitle: 'See the breath pattern in real time',
+    filePrefix: 'breathing',
+    steps: [
+      { label: 'inhale', minMs: 4000, maxMs: 6000 },
+      { label: 'pause', minMs: 1000, maxMs: 2000 },
+      { label: 'exhale', minMs: 4000, maxMs: 6000 },
+      { label: 'pause', minMs: 1000, maxMs: 2000 },
+    ],
+  },
+  humming: {
+    title: 'Follow the humming prompts',
+    description: 'Record a guided sample while the app tracks low hum, pause, and high hum timing.',
+    visualizerTitle: 'See the humming pattern in real time',
+    filePrefix: 'humming',
+    steps: [
+      { label: 'low hum', minMs: 4000, maxMs: 6000 },
+      { label: 'pause', minMs: 1000, maxMs: 2000 },
+      { label: 'high hum', minMs: 4000, maxMs: 6000 },
+      { label: 'pause', minMs: 1000, maxMs: 2000 },
+    ],
+  },
+}
 
 function randomDuration(minMs, maxMs) {
   return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs
 }
 
-export function Spectrogram({ onRecordingComplete }) {
+export function Spectrogram({ mode = 'breathing', onRecordingComplete }) {
+  const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.breathing
   const canvasRef = useRef(null)
   const animationFrameRef = useRef(null)
   const streamRef = useRef(null)
@@ -74,7 +95,7 @@ export function Spectrogram({ onRecordingComplete }) {
       return
     }
 
-    const step = BREATH_STEPS[instructionIndexRef.current]
+    const step = modeConfig.steps[instructionIndexRef.current]
     const startMs = getElapsedMs()
     const durationMs = randomDuration(step.minMs, step.maxMs)
 
@@ -92,7 +113,7 @@ export function Spectrogram({ onRecordingComplete }) {
     phaseDurationRef.current = durationMs
     updatePhaseProgress()
 
-    instructionIndexRef.current = (instructionIndexRef.current + 1) % BREATH_STEPS.length
+    instructionIndexRef.current = (instructionIndexRef.current + 1) % modeConfig.steps.length
 
     instructionTimeoutRef.current = setTimeout(() => {
       if (mediaRecorderRef.current?.state === 'recording') {
@@ -227,14 +248,14 @@ export function Spectrogram({ onRecordingComplete }) {
       const blob = new Blob(chunksRef.current, {
         type: mediaRecorder.mimeType || 'audio/webm',
       })
-      const file = new File([blob], `recording-${Date.now()}.webm`, {
+      const file = new File([blob], `${modeConfig.filePrefix}-recording-${Date.now()}.webm`, {
         type: blob.type,
       })
       const labels = labelsRef.current.filter((item) => item.durationMs !== null)
 
       setRecordedBlob(blob)
       chunksRef.current = []
-      onRecordingComplete?.({ file, labels })
+      onRecordingComplete?.({ file, labels, mode })
     }
 
     streamRef.current = stream
@@ -270,16 +291,15 @@ export function Spectrogram({ onRecordingComplete }) {
     <div className="recorder-layout">
       <article className="recorder-card">
         <p className="eyebrow">Guided recording</p>
-        <h3>Follow the breathing prompts</h3>
-        <p className="helper-text">
-          Record a guided sample while the app tracks inhale, pause, and exhale timing.
-        </p>
+        <h3>{modeConfig.title}</h3>
+        <p className="helper-text">{modeConfig.description}</p>
+        <div className="instruction-badge">{currentInstruction}</div>
+
         <div className="recorder-actions">
           <button className="button button-primary" type="button" onClick={isRecording ? stopRecording : startRecording}>
             {isRecording ? 'Stop Microphone' : 'Start Microphone'}
           </button>
         </div>
-        <div className="instruction-badge">{currentInstruction}</div>
         {isRecording && (
           <>
             <p className="progress-label">Current phase progress</p>
@@ -293,7 +313,7 @@ export function Spectrogram({ onRecordingComplete }) {
 
       <article className="visualizer-card">
         <p className="eyebrow">Live visualization</p>
-        <h3>See the breath pattern in real time</h3>
+        <h3>{modeConfig.visualizerTitle}</h3>
         <p className="helper-text">The spectrogram updates while the microphone is active and stays available for review.</p>
         <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}></canvas>
         {audioUrl && <audio className="audio-player" controls src={audioUrl}></audio>}

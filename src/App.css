@@ -181,6 +181,13 @@
   gap: 1rem;
 }
 
+.mode-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
 .recorder-card,
 .visualizer-card {
   padding: 1.25rem;
@@ -199,11 +206,13 @@
 .instruction-badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.55rem 0.9rem;
+  padding: 1.55rem 1.9rem;
+  font-size: 5vh;
   border-radius: 999px;
   background: var(--color-primary-soft);
   color: var(--color-primary);
   font-weight: 700;
+  margin-bottom: 20px;
   text-transform: capitalize;
 }
 

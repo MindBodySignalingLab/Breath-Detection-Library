@@ -9,18 +9,39 @@ const SUPABASE_KEY = 'sb_publishable_kUJzrkhD6waN4kYfh_7oGw_kR3GgMxB'
 const BUCKET_NAME = 'breath-humming-audio'
 const FOLDER_NAME = 'public'
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+const MODES = {
+  breathing: {
+    key: 'breathing',
+    label: 'Breathing',
+    uploadLabel: 'breathing recording',
+    uploadButton: 'Upload Breathing Recording',
+    helperText: 'Record a breathing sample first to enable upload.',
+    type: false,
+  },
+  humming: {
+    key: 'humming',
+    label: 'Humming',
+    uploadLabel: 'humming recording',
+    uploadButton: 'Upload Humming Recording',
+    helperText: 'Record a humming sample first to enable upload.',
+    type: true,
+  },
+}
 
 function App() {
   const [recordingFile, setRecordingFile] = useState(null)
   const [recordingLabels, setRecordingLabels] = useState([])
+  const [recordingMode, setRecordingMode] = useState(MODES.breathing.key)
   const [downloadError, setDownloadError] = useState('')
   const [uploadMessage, setUploadMessage] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const [isDownloading, setIsDownloading] = useState(false)
+  const selectedMode = MODES[recordingMode]
 
   function handleRecordingComplete(recording) {
     setRecordingFile(recording?.file ?? null)
     setRecordingLabels(recording?.labels ?? [])
+    setRecordingMode(recording?.mode ?? MODES.breathing.key)
     setUploadMessage('')
   }
 
@@ -45,9 +66,10 @@ function App() {
       await supabase.from('audio_meta_data').insert({
         download_link: fileUrl,
         labels: recordingLabels,
+        type: selectedMode.type,
       })
 
-      setUploadMessage('Recording uploaded successfully.')
+      setUploadMessage(`${selectedMode.label} recording uploaded successfully.`)
     } catch (error) {
       console.error(error)
       setUploadMessage(error instanceof Error ? error.message : 'Upload failed.')
@@ -115,8 +137,8 @@ function App() {
         <div className="hero-copy">
           <h1>Breath Detection Data Collection</h1>
           <p className="hero-text">
-            A guided recording tool for inhale and exhale exercises that captures audio, labels each
-            breathing phase, and supports open research workflows.
+            A guided recording tool for breathing and humming exercises that captures audio, labels each
+            phase, and supports open research workflows.
           </p>
         </div>
       </section>
@@ -129,8 +151,8 @@ function App() {
         <div className="steps-grid">
           <article className="step-card">
             <span className="step-number">1</span>
-            <h3>Follow the breathing prompts</h3>
-            <p>Use the guided inhale, pause, and exhale instructions while the app records audio.</p>
+            <h3>Choose a recording mode</h3>
+            <p>Pick breathing or humming, then follow the guided prompts while the app records audio.</p>
           </article>
           <article className="step-card">
             <span className="step-number">2</span>
@@ -149,7 +171,20 @@ function App() {
         <div className="section-heading">
           <h2> Help us collect more data </h2>
         </div>
-        <Spectrogram onRecordingComplete={handleRecordingComplete} />
+        <div className="mode-toggle" role="tablist" aria-label="Recording mode">
+          {Object.values(MODES).map((mode) => (
+            <button
+              key={mode.key}
+              className={`button ${recordingMode === mode.key ? 'button-primary' : 'button-secondary'}`}
+              type="button"
+              onClick={() => setRecordingMode(mode.key)}
+              aria-pressed={recordingMode === mode.key}
+            >
+              {mode.label} Mode
+            </button>
+          ))}
+        </div>
+        <Spectrogram mode={recordingMode} onRecordingComplete={handleRecordingComplete} />
       </section>
 
       <section className="section section-grid">
@@ -170,10 +205,12 @@ function App() {
               onClick={insertData}
               disabled={!recordingFile || isUploading}
             >
-              {isUploading ? 'Uploading...' : 'Upload Recording'}
+              {isUploading ? `Uploading ${selectedMode.uploadLabel}...` : selectedMode.uploadButton}
             </button>
             <p className="helper-text">
-              {recordingFile ? `Ready to upload: ${recordingFile.name}` : 'Record a sample first to enable upload.'}
+              {recordingFile
+                ? `Ready to upload ${selectedMode.uploadLabel}: ${recordingFile.name}`
+                : selectedMode.helperText}
             </p>
             {uploadMessage && <p className="status-text">{uploadMessage}</p>}
           </article>

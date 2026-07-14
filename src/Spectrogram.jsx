@@ -12,28 +12,22 @@ const MODE_CONFIG = {
     visualizerTitle: 'See the breath pattern in real time',
     filePrefix: 'breathing',
     steps: [
-      { label: 'inhale', minMs: 4000, maxMs: 6000 },
-      { label: 'pause', minMs: 1000, maxMs: 2000 },
-      { label: 'exhale', minMs: 4000, maxMs: 6000 },
-      { label: 'pause', minMs: 1000, maxMs: 2000 },
+      { label: 'inhale', durationMs: 4000 },
+      { label: 'pause', durationMs: 1500 },
+      { label: 'exhale', durationMs: 6000 },
     ],
   },
   humming: {
     title: 'Follow the humming prompts',
-    description: 'Record a guided sample while the app tracks low hum, pause, and high hum timing.',
+    description: 'Record a guided sample while the app tracks low hum, rest/breath, and high hum timing.',
     visualizerTitle: 'See the humming pattern in real time',
     filePrefix: 'humming',
     steps: [
-      { label: 'low hum', minMs: 4000, maxMs: 6000 },
-      { label: 'pause', minMs: 1000, maxMs: 2000 },
-      { label: 'high hum', minMs: 4000, maxMs: 6000 },
-      { label: 'pause', minMs: 1000, maxMs: 2000 },
+      { label: 'low hum', durationMs: 5000 },
+      { label: 'rest / breath', durationMs: 3000 },
+      { label: 'high hum', durationMs: 5000 },
     ],
   },
-}
-
-function randomDuration(minMs, maxMs) {
-  return Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs
 }
 
 export function Spectrogram({ mode = 'breathing', onRecordingComplete }) {
@@ -97,7 +91,7 @@ export function Spectrogram({ mode = 'breathing', onRecordingComplete }) {
 
     const step = modeConfig.steps[instructionIndexRef.current]
     const startMs = getElapsedMs()
-    const durationMs = randomDuration(step.minMs, step.maxMs)
+    const durationMs = step.durationMs
 
     finishCurrentLabel(startMs)
     setCurrentInstruction(step.label)
@@ -293,29 +287,42 @@ export function Spectrogram({ mode = 'breathing', onRecordingComplete }) {
         <p className="eyebrow">Guided recording</p>
         <h3>{modeConfig.title}</h3>
         <p className="helper-text">{modeConfig.description}</p>
-        <div className="instruction-badge">{currentInstruction}</div>
-
-        <div className="recorder-actions">
-          <button className="button button-primary" type="button" onClick={isRecording ? stopRecording : startRecording}>
-            {isRecording ? 'Stop Microphone' : 'Start Microphone'}
-          </button>
-        </div>
-        {isRecording && (
-          <>
-            <p className="progress-label">Current phase progress</p>
-            <div className="progress-track" aria-hidden="true">
-              <div className="progress-bar" style={{ width: `${phaseProgress * 100}%` }}></div>
+        <div className="phase-guide" aria-label={`${modeConfig.title} sequence`}>
+          {modeConfig.steps.map((step) => (
+            <div className="phase-guide-item" key={step.label}>
+              <strong>{step.label}</strong>
+              <span>{step.durationMs / 1000} seconds</span>
             </div>
-            <p className="countdown-text">{phaseSecondsLeft}s left in this step</p>
-          </>
-        )}
+          ))}
+        </div>
+        <p className="helper-text">The sequence repeats until you stop the microphone. You can listen back before uploading.</p>
       </article>
 
       <article className="visualizer-card">
-        <p className="eyebrow">Live visualization</p>
-        <h3>{modeConfig.visualizerTitle}</h3>
-        <p className="helper-text">The spectrogram updates while the microphone is active and stays available for review.</p>
+        <div className="visualizer-heading">
+          <div>
+            <p className="eyebrow">Live visualization</p>
+            <h3>{modeConfig.visualizerTitle}</h3>
+          </div>
+          <div className={`instruction-badge ${isRecording ? 'instruction-badge-active' : ''}`} aria-live="polite">
+            {currentInstruction}
+          </div>
+        </div>
+        {isRecording && (
+          <div className="phase-progress">
+            <div className="progress-summary">
+              <span>Current phase</span>
+              <strong>{phaseSecondsLeft}s left</strong>
+            </div>
+            <div className="progress-track" aria-hidden="true">
+              <div className="progress-bar" style={{ width: `${phaseProgress * 100}%` }}></div>
+            </div>
+          </div>
+        )}
         <canvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT}></canvas>
+        <button className="button button-primary recorder-button" type="button" onClick={isRecording ? stopRecording : startRecording}>
+          {isRecording ? 'Stop Recording' : 'Start Recording'}
+        </button>
         {audioUrl && <audio className="audio-player" controls src={audioUrl}></audio>}
       </article>
     </div>

@@ -41,7 +41,9 @@ function App() {
   function handleRecordingComplete(recording) {
     setRecordingFile(recording?.file ?? null)
     setRecordingLabels(recording?.labels ?? [])
-    setRecordingMode(recording?.mode ?? MODES.breathing.key)
+    if (recording?.mode) {
+      setRecordingMode(recording.mode)
+    }
     setUploadMessage('')
   }
 
@@ -139,6 +141,7 @@ function App() {
           <p className="hero-text">
             A guided recording tool for breathing and humming exercises that captures audio, labels each
             phase, and supports open research workflows.
+            At The Verse, we’re building an open source dataset and detection library for breath and humming detection. This project grows with every contribution. By recording a breath and humming sample, you’ll help create a resource that makes wellness-focused interactive experiences more accessible. We’re excited to build it together.
           </p>
         </div>
       </section>

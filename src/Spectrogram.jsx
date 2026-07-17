@@ -30,7 +30,7 @@ const MODE_CONFIG = {
   },
 }
 
-export function Spectrogram({ mode = 'breathing', onRecordingComplete }) {
+export function Spectrogram({ mode = 'breathing', onRecordingComplete, uploadAction = null }) {
   const modeConfig = MODE_CONFIG[mode] ?? MODE_CONFIG.breathing
   const canvasRef = useRef(null)
   const animationFrameRef = useRef(null)
@@ -324,6 +324,7 @@ export function Spectrogram({ mode = 'breathing', onRecordingComplete }) {
           {isRecording ? 'Stop Recording' : 'Start Recording'}
         </button>
         {audioUrl && <audio className="audio-player" controls src={audioUrl}></audio>}
+        {uploadAction}
       </article>
     </div>
   )

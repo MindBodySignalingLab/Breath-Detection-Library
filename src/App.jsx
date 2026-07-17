@@ -133,14 +133,31 @@ function App() {
     }
   }
 
+  const uploadCard = (className = '') => (
+    <article className={`info-card upload-card ${className}`.trim()}>
+      <button
+        className="button button-primary upload-button"
+        type="button"
+        onClick={insertData}
+        disabled={!recordingFile || isUploading}
+      >
+        {isUploading ? `Uploading ${selectedMode.uploadLabel}...` : selectedMode.uploadButton}
+      </button>
+      <p className="helper-text">
+        {recordingFile
+          ? `Your ${selectedMode.uploadLabel} is ready. Upload it now to contribute.`
+          : selectedMode.helperText}
+      </p>
+      {uploadMessage && <p className="status-text" role="status">{uploadMessage}</p>}
+    </article>
+  )
+
   return (
     <main className="page-shell">
       <section className="hero section">
         <div className="hero-copy">
           <h1>Breath Detection Data Collection</h1>
           <p className="hero-text">
-            A guided recording tool for breathing and humming exercises that captures audio, labels each
-            phase, and supports open research workflows.
             At The Verse, we’re building an open source dataset and detection library for breath and humming detection. This project grows with every contribution. By recording a breath and humming sample, you’ll help create a resource that makes wellness-focused interactive experiences more accessible. We’re excited to build it together.
           </p>
         </div>
@@ -187,7 +204,11 @@ function App() {
             </button>
           ))}
         </div>
-        <Spectrogram mode={recordingMode} onRecordingComplete={handleRecordingComplete} />
+        <Spectrogram
+          mode={recordingMode}
+          onRecordingComplete={handleRecordingComplete}
+          uploadAction={uploadCard('mobile-upload-card')}
+        />
       </section>
 
       <section className="section section-grid">
@@ -197,26 +218,7 @@ function App() {
           <p>One path is for contributors adding labeled data. The other is for researchers using it.</p>
         </div>
         <div className="action-grid">
-          <article className="info-card">
-            <h3>Upload Your Recording</h3>
-            <p>
-              Save your labeled sample to the Supabase dataset for future model training and analysis.
-            </p>
-            <button
-              className="button button-primary"
-              type="button"
-              onClick={insertData}
-              disabled={!recordingFile || isUploading}
-            >
-              {isUploading ? `Uploading ${selectedMode.uploadLabel}...` : selectedMode.uploadButton}
-            </button>
-            <p className="helper-text">
-              {recordingFile
-                ? `Ready to upload ${selectedMode.uploadLabel}: ${recordingFile.name}`
-                : selectedMode.helperText}
-            </p>
-            {uploadMessage && <p className="status-text">{uploadMessage}</p>}
-          </article>
+          {uploadCard('desktop-upload-card')}
 
           <article className="info-card">
             <h3>Download Open Recordings</h3>
@@ -238,6 +240,7 @@ function App() {
       </section>
 
       <section className="section footer-panel">
+        <p className="footer-contribution">Contribute to the Future of Games For Health &amp; Wellbeing</p>
         <p className="eyebrow">Open research</p>
         <h2>Built to support breath-detection research as an open-source workflow.</h2>
         <p>

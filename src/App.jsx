@@ -154,14 +154,6 @@ function App() {
 
   return (
     <main className="page-shell">
-      <section className="hero section">
-        <div className="hero-copy">
-          <h1>Breath Detection Data Collection</h1>
-          <p className="hero-text">
-            At The Verse, we’re building an open source dataset and detection library for breath and humming detection. This project grows with every contribution. By recording a breath and humming sample, you’ll help create a resource that makes wellness-focused interactive experiences more accessible. We’re excited to build it together.
-          </p>
-        </div>
-      </section>
 
       <section className="section">
         <div className="section-heading">
@@ -237,16 +229,6 @@ function App() {
             {downloadError && <p className="status-text status-text-error">{downloadError}</p>}
           </article>
         </div>
-      </section>
-
-      <section className="section footer-panel">
-        <p className="footer-contribution">Contribute to the Future of Games For Health &amp; Wellbeing</p>
-        <p className="eyebrow">Open research</p>
-        <h2>Built to support breath-detection research as an open-source workflow.</h2>
-        <p>
-          This project helps collect guided breathing exercise data, attach labels to each phase, and
-          make public recordings easy to reuse.
-        </p>
       </section>
     </main>
   )
